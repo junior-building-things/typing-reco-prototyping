@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat Prototype</title>
+<style>
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
+body {
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+background: #f5f5f5;
+overflow: hidden;
+}
+.phone-container {
+width: 375px;
+height: 750px;
+margin: 20px auto;
+background: #f5f5f5;
+border-radius: 0px;
+box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+overflow: hidden;
+position: relative;
+display: flex;
+flex-direction: column;
+}
+/* Status Bar */
+.status-bar {
+height: 44px;
+background: #f5f5f5;
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 0 20px;
+font-size: 15px;
+font-weight: 600;
+margin-left: 10px;
+}
+.status-icons {
+display: flex;
+gap: 5px;
+align-items: center;
+margin-right: 10px;
+}
+/* Header */
+.header {
+background: #f5f5f5;
+padding: 10px 16px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+border-bottom: 1px solid #e0e0e0;
+z-index: 20; /* Ensure header stays above scrolled content */
+}
+.header-left {
+display: flex;
+align-items: center;
+gap: 12px;
+}
+.back-btn {
+font-size: 24px;
+color: #333;
+cursor: url('finger.svg'), auto;
+margin-right: 10px;
+margin-left: 2px;
+}
+.profile-section {
+display: flex;
+align-items: center;
+gap: 10px;
+}
+.profile-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #ddd;
+  position: relative;
+  background-image: url('avatar.png'); 
+  background-size: cover;
+  background-position: center;
+}
+.online-indicator {
+width: 12px;
+height: 12px;
+background: #00d856;
+border-radius: 50%;
+position: absolute;
+bottom: 0;
+right: 0;
+border: 2px solid #f5f5f5;
+}
+.profile-info h3 {
+font-size: 17px;
+font-weight: 600;
+}
+.profile-info p {
+font-size: 13px;
+color: #8e8e93;
+}
+.header-right {
+display: flex;
+gap: 20px;
+font-size: 24px;
+color: #333;
+}
+/* Chat Area */
+.chat-area {
+flex: 1;
+overflow-y: hidden;
+padding: 16px 16px 0px 16px;
+background: #f5f5f5;
+display: flex;
+flex-direction: column;
+justify-content: flex-end;
+position: relative;
+}
+.message {
+margin-bottom: 16px;
+display: flex;
+align-items: flex-end;
+gap: 8px;
+}
+.message.received {
+justify-content: flex-start;
+}
+.message.sent {
+justify-content: flex-end;
+}
+.message.sent + .message.sent {
+margin-top: -8px;
+}
+.message-avatar {
+width: 32px;
+height: 32px;
+border-radius: 50%;
+background: #ddd;
+flex-shrink: 0;
+background-image: url('avatar.png');
+background-size: cover;
+background-position: center;
+}
+.message.sent .message-avatar {
+display: none;
+}
+.message-bubble {
+max-width: 70%;
+padding: 12px 16px;
+border-radius: 20px;
+font-size: 16px;
+line-height: 1.4;
+position: relative;
+}
+.message.received .message-bubble {
+background: white;
+border-bottom-left-radius: 0px;
+}
+.message.received .message-bubble::after {
+content: '';
+position: absolute;
+bottom: -1.5px;
+left: -6.5px;
+width: 7px;
+height: 15px;
+background-color: transparent;
+-webkit-mask-image: url("data:image/svg+xml,%3Csvg width='4' height='9' viewBox='0 0 4 9' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 6.05272C0 7.16539 0.901993 8.06738 2.01466 8.06738H4V-5.74589e-05C4 1.2343 3.43011 2.39952 2.45576 3.15735L0.777786 4.46244C0.287033 4.84414 0 5.43102 0 6.05272Z' fill='white'/%3E%3C/svg%3E");
+-webkit-mask-size: 100% 100%;
+mask-image: url("data:image/svg+xml,%3Csvg width='4' height='9' viewBox='0 0 4 9' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 6.05272C0 7.16539 0.901993 8.06738 2.01466 8.06738H4V-5.74589e-05C4 1.2343 3.43011 2.39952 2.45576 3.15735L0.777786 4.46244C0.287033 4.84414 0 5.43102 0 6.05272Z' fill='white'/%3E%3C/svg%3E");
+mask-size: 100% 100%;
+background: white;
+}
+.message.sent .message-bubble {
+background: #00b4d8;
+color: white;
+border-bottom-right-radius: 4px;
+border-top-right-radius: 4px;
+}
+.message.sent.has-tail .message-bubble:not(.message-sticker) {
+border-bottom-right-radius: 0px;
+}
+.message.sent.has-tail .message-bubble:not(.message-sticker)::after {
+content: '';
+position: absolute;
+bottom: -1.5px;
+right: -6.5px;
+width: 7px;
+height: 15px;
+background-color: transparent;
+-webkit-mask-image: url("data:image/svg+xml,%3Csvg width='4' height='9' viewBox='0 0 4 9' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 6.05272C0 7.16539 0.901993 8.06738 2.01466 8.06738H4V-5.74589e-05C4 1.2343 3.43011 2.39952 2.45576 3.15735L0.777786 4.46244C0.287033 4.84414 0 5.43102 0 6.05272Z' fill='white'/%3E%3C/svg%3E");
+-webkit-mask-size: 100% 100%;
+mask-image: url("data:image/svg+xml,%3Csvg width='4' height='9' viewBox='0 0 4 9' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 6.05272C0 7.16539 0.901993 8.06738 2.01466 8.06738H4V-5.74589e-05C4 1.2343 3.43011 2.39952 2.45576 3.15735L0.777786 4.46244C0.287033 4.84414 0 5.43102 0 6.05272Z' fill='white'/%3E%3C/svg%3E");
+mask-size: 100% 100%;
+transform: scaleX(-1);
+background: #00b4d8;
+}
+.message.received + .message.sent .message-bubble {
+border-top-right-radius: 20px;
+}
+.message-reaction {
+position: absolute;
+bottom: -8px;
+right: -8px;
+background: white;
+border-radius: 50%;
+width: 24px;
+height: 24px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 16px;
+box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.timestamp {
+text-align: center;
+color: #8e8e93;
+font-size: 13px;
+margin: 20px 0;
+}
+.message-sticker {
+padding: 0;
+background: transparent !important;
+max-width: 150px;
+}
+.message-sticker img {
+width: 120px;
+height: 120px;
+border-radius: 12px;
+}
+.text-input::placeholder {
+color: #A8A8A8;
+}
+.text-input {
+cursor: url('finger.svg'), auto;
+}
+.text-input::-webkit-input-placeholder {
+color: #A8A8A8;
+}
+/* Favorite Icon Style */
+.favorite-icon {
+    width: 30px;
+    height: 30px;
+    align-self: center;
+    cursor: url('finger.svg'), auto;
+    opacity: 0.8;
+    margin-right: 3px; 
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.favorite-icon:active {
+    transform: scale(0.8);
+}
+.favorite-icon.dismissed {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0);
+}
+
+/* Toast Notification */
+.toast-container {
+    position: absolute;
+    top: 100px; /* Positioned just below the header */
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.toast {
+    background: transparent;
+    border-radius: 14px;
+    padding: 8px 16px;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.toast img {
+    height: 40px; /* Adjust based on your png size */
+    width: auto;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 14px;
+}
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Sticker Recommendations */
+.sticker-recommendations {
+background: #F5F5F5;
+border-top: none;
+padding: 8px 16px;
+transition: all 0s ease;
+overflow: hidden;
+position: absolute;
+bottom: 335px;
+left: 0;
+right: 0;
+z-index: 10;
+}
+.sticker-recommendations.hidden {
+max-height: 0;
+padding: 0;
+opacity: 0;
+}
+.sticker-scroll {
+display: flex;
+gap: 12px;
+overflow-x: auto;
+-webkit-overflow-scrolling: touch;
+scrollbar-width: none;
+}
+.sticker-scroll::-webkit-scrollbar {
+display: none;
+}
+.sticker-item {
+flex-shrink: 0;
+width: 60px;
+height: 60px;
+cursor: url('finger.svg'), auto;
+transition: transform 0.2s;
+border-radius: 12px;
+overflow: hidden;
+}
+.sticker-item:active {
+transform: scale(0.95);
+}
+.sticker-item img {
+width: 100%;
+height: 100%;
+cursor: url('finger.svg'), auto;
+object-fit: cover;
+}
+/* Input Area */
+.input-area {
+background: #F5F5F5;
+border-top: none;
+padding: 8px 16px;
+display: flex;
+align-items: center;
+gap: 12px;
+}
+.input-icon {
+font-size: 28px;
+color: #666;
+cursor: url('finger.svg'), auto;
+}
+.input-icon-img {
+width: 30px;
+height: 30px;
+margin-left: -6px;
+cursor: url('finger.svg'), auto;
+}
+.sticker-icon {
+    width: 22px;
+    height: 22px;
+    margin-right: 3px;
+    cursor: url('finger.svg'), auto;
+}
+.album-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px; /* Space between album and sticker */
+    cursor: url('finger.svg'), auto;
+}
+.text-input-container {
+flex: 1;
+display: flex;
+align-items: center;
+gap: 8px;
+background: white;
+border-radius: 20px;
+padding: 0 12px;
+}
+.text-input {
+flex: 1;
+padding: 10px 4px;
+background: transparent;
+border: none;
+font-size: 16px;
+caret-color: #FE2C55;
+outline: none;
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+color: #000;
+}
+.text-input::placeholder {
+    color: #999;
+    font-weight: 300;
+}
+.send-btn {
+width: 32px;
+height: 32px;
+background: transparent;
+border-radius: 50%;
+margin-right: -6px;
+display: flex;
+align-items: center;
+justify-content: center;
+color: white;
+cursor: url('finger.svg'), auto;
+}
+.send-btn-icon {
+width: 100%;
+height: 100%;
+object-fit: contain;
+}
+.microphone-icon {
+width: 22px;
+height: 22px;
+object-fit: contain;
+}
+font-size: 20px;
+cursor: url('finger.svg'), auto;
+}
+/* Bottom Tabs */
+.bottom-tabs {
+background-color: #D1D5DC !important;
+background: #D1D5DC !important;
+border-top: 1px solid #B0B5BB;
+display: flex !important;
+flex-direction: row !important;
+height: 50px;
+align-items: center;
+justify-content: center;
+font-size: 15px;
+color: #000;
+width: 100%;
+}
+.tab {
+padding: 8px 20px;
+position: relative;
+flex: 1;
+text-align: center;
+white-space: nowrap;
+display: inline-block;
+}
+.tab:not(:last-child)::after {
+content: '';
+position: absolute;
+right: 0;
+top: 50%;
+transform: translateY(-50%);
+height: 30px;
+width: 1px;
+background: #C2C2C2;
+}
+.tab.active {
+color: #000;
+}
+/* Keyboard */
+.keyboard {
+background: #D1D5DC;
+padding: 8px 4px 12px;
+}
+.keyboard-suggestions {
+display: flex;
+justify-content: center;
+gap: 8px;
+margin-bottom: 8px;
+padding: 0 8px;
+}
+.suggestion {
+padding: 6px 12px;
+background: white;
+border-radius: 6px;
+font-size: 14px;
+border: 1px solid #999;
+}
+.keyboard-row {
+display: flex;
+justify-content: center;
+gap: 6px;
+margin-bottom: 8px;
+padding: 0 4px;
+}
+.keyboard-row.row-2 {
+padding: 0 20px;
+}
+.key {
+flex: 1;
+height: 42px;
+background: white;
+border-radius: 6px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 22px;
+font-weight: 400;
+box-shadow: 0 1px 0 rgba(0,0,0,0.3);
+}
+.key.wide {
+flex: 2.5;
+font-size: 16px;
+}
+.key.extra-wide-key {
+flex: 4.5;
+font-size: 14px;
+}
+.key.extra-wide {
+flex: 10;
+font-size: 14px;
+}
+.key.special {
+background: #aeb3b8;
+font-size: 18px;
+}
+.home-indicator {
+height: 20px;
+display: flex;
+align-items: flex-start;
+justify-content: center;
+background: #D1D5DC;
+padding-top: 20px;
+}
+.home-bar {
+width: 134px;
+height: 5px;
+background: #1c1c1e;
+border-radius: 3px;
+}
+@keyframes slideInMessage {
+from {
+opacity: 1;
+transform: translateY(10px);
+}
+to {
+opacity: 1;
+transform: translateY(0);
+}
+}
+.message.new {
+animation: slideInMessage 0.2s ease;
+}
+#send-key {
+    font-size: 14px; 
+    font-weight: 350;
+    text-transform: lowercase;
+}
+#toggle-key {
+    font-size: 14px; 
+    font-weight: 350;
+    text-transform: lowercase;
+}
+#space-key {
+    font-size: 14px; 
+    font-weight: 350;
+    text-transform: lowercase;
+}
+#tiktok-key {
+    font-size: 15px; 
+    font-weight: 350;
+    text-transform: capitalize;
+}
+#experience-key {
+    font-size: 15px; 
+    font-weight: 350;
+    text-transform: capitalize;
+}
+#design-key {
+    font-size: 15px; 
+    font-weight: 350;
+    text-transform: capitalize;
+}
+#send-key {
+    font-size: 14px; 
+    font-weight: 350;
+    text-transform: lowercase;
+    background: #007AFF; /* Blue color - change to any color you want */
+    color: white; /* Text color */
+}
+.phone-container {
+    /* Replace 'finger.png' with your actual filename */
+    cursor: url('finger.svg'), auto;
+}
+
+/* --- NEW STICKER KEYBOARD STYLES --- */
+.sticker-keyboard {
+    background: #f5f5f5;
+    height: 284.5px; /* Match keyboard + home-indicator */
+    display: none; /* Hidden by default */
+    flex-direction: column;
+    padding-bottom: 0px;
+    overflow: hidden;
+    position: relative;
+}
+.sticker-keyboard-handle {
+    width: 100%;
+    padding: 5px 0;
+    background: #FFFFFF;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    display: flex;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.sticker-keyboard-handle::after {
+    content: '';
+    width: 40px;
+    height: 4px;
+    background: #E0E0E0;
+    border-radius: 2px;
+}
+.sticker-nav {
+    display: flex;
+    justify-content: space-around;
+    padding: 5px 10px 15px 10px;
+    align-items: center;
+    background: #f5f5f5;
+}
+.sticker-nav-item {
+    font-size: 24px;
+    color: #999;
+    padding: 5px;
+    cursor: url('finger.svg'), auto;
+}
+.sticker-nav-item.active {
+    background: #E8E8E8;
+    border-radius: 8px;
+    color: #333;
+    filter: none;
+    opacity: 1;
+}
+.sticker-nav-item img {
+    width: 21px;
+    height: 21px;
+    object-fit: contain;
+    border-radius: 4px;
+    display: block;
+}
+.sticker-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 16px;
+    scrollbar-width: none; /* Firefox */
+    background: #FFFFFF;
+}
+.sticker-content::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+.sticker-section-title {
+    font-size: 13px;
+    color: #888;
+    margin: 16px 0 12px 0;
+    font-weight: 300;
+    margin-left: 2px;
+}
+.sticker-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    justify-items: center;
+    gap: 12px;
+}
+.sticker-grid-item {
+    width: 69px;
+    height: 69px;
+    aspect-ratio: 1;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: url('finger.svg'), auto;
+}
+.sticker-grid-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.add-favorite-btn {
+    background: #F0F0F0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: #999;
+    font-weight: 300;
+}
+/* ----------------------------------- */
+.sticker-home-indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 0 7px 0;
+    background: transparent;
+    flex-shrink: 0;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+</style>
+</head>
+<body>
+<div class="phone-container">
+<div class="toast-container">
+    <div class="toast" id="toast">
+        <img src="toast.png" alt="Notification" class="toast-img">
+        <img src="toast_again.png" alt="Already saved" class="toast-img-again" style="display:none;">
+    </div>
+</div>
+
+<div class="status-bar">
+<span>8:00</span>
+<div class="status-icons">
+<img src="status.png" style="height: 12px; width: auto;">
+</div>
+</div>
+<div class="header">
+<div class="header-left">
+<div class="back-btn">
+    <img src="back.svg" alt="Back">
+</div>
+<div class="profile-section">
+<div class="profile-pic">
+<div class="online-indicator"></div>
+</div>
+<div class="profile-info">
+<h3>Thomas 🔥<span style="color: #FF6613; font-weight: 500;">3</span></h3>
+<p><span style="color: #858585; font-weight: 320;">Active now</span></p>
+</div>
+</div>
+</div>
+<div class="header-right">
+<span><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M3.05371 3.10538C5.92644 1.67261 9.85843 1.24172 12.5811 3.18643C14.7671 4.74786 17.7947 4.20374 20.0527 3.10538C20.7058 2.77912 21.5 3.27041 21.5 3.99991V14.9999C21.5 15.3786 21.286 15.7251 20.9473 15.8944C18.0372 17.3495 14.2034 17.8023 11.4189 15.8134C9.40399 14.3741 6.65886 14.8072 4.5 15.6562V21.9999C4.49998 22.276 4.27613 22.4999 4 22.4999H3C2.72387 22.4999 2.50002 22.276 2.5 21.9999V3.99991C2.5 3.6245 2.71794 3.27311 3.05371 3.10538ZM11.4189 4.81339C9.41587 3.38263 6.65726 3.80786 4.5 4.65616V13.5312C7.13455 12.6639 10.2247 12.5033 12.5811 14.1864C14.596 15.6256 17.3412 15.1926 19.5 14.3437V5.46866C16.8655 6.33594 13.7753 6.49647 11.4189 4.81339Z" fill="black"/>
+</svg></span>
+<span>⋯</span>
+</div>
+</div>
+<div class="chat-area" id="chatArea">
+<div class="message received">
+<div class="message-avatar"></div>
+<div class="message-bubble">
+Absolutelyyy! The stage was set like an enchanted forest.
+</div>
+</div>
+<div class="message sent">
+<div class="message-bubble">
+This sounds amazing!
+</div>
+</div>
+<div class="message sent has-tail">
+<div class="message-bubble">
+Did she sing "Love Story"?
+</div>
+</div>
+<div class="timestamp">9:18 PM</div>
+<div class="message received">
+<div class="message-avatar"></div>
+<div class="message-bubble">
+Yes, hahahah, and when she did, everyone's wristbands lit up!
+</div>
+</div>
+</div>
+<div class="sticker-recommendations hidden" id="stickerRecs">
+<div class="sticker-scroll">
+<div class="sticker-item" data-sticker="1" data-keyword="tired">
+<img src="sticker 1.png">
+</div>
+<div class="sticker-item" data-sticker="2" data-keyword="tired">
+<img src="sticker 2.png">
+</div>
+<div class="sticker-item" data-sticker="3" data-keyword="tired">
+<img src="sticker 3.png">
+</div>
+<div class="sticker-item" data-sticker="4" data-keyword="tired">
+<img src="sticker 4.png">
+</div>
+<div class="sticker-item" data-sticker="5" data-keyword="tired">
+<img src="sticker 5.png">
+</div>
+<div class="sticker-item" data-sticker="6" data-keyword="happy">
+<img src="sticker 6.png">
+</div>
+<div class="sticker-item" data-sticker="7" data-keyword="happy">
+<img src="sticker 7.png">
+</div>
+<div class="sticker-item" data-sticker="8" data-keyword="happy">
+<img src="sticker 8.png">
+</div>
+<div class="sticker-item" data-sticker="9" data-keyword="happy">
+<img src="sticker 9.png">
+</div>
+<div class="sticker-item" data-sticker="10" data-keyword="happy">
+<img src="sticker 10.png">
+</div>
+</div>
+</div>
+<div class="input-area">
+<div class="text-input-container">
+<img src="camera_default.svg" class="input-icon-img" alt="camera">
+<input type="text" class="text-input" value="" placeholder="Message...">
+<img src="album.svg" class="album-icon" alt="album">
+<img src="sticker.svg" class="sticker-icon" alt="emoji">
+<div class="send-btn"><img src="microphone.svg" class="microphone-icon" alt="microphone"></div>
+</div>
+</div>
+<div class="bottom-tabs" style="background-color: #D1D5DC !important; display: flex !important; justify-content: center !important; align-items: center !important; padding-top: 8px !important; padding-bottom: 3px !important;">
+<div class="tab" id="tiktok-key">TikTok</div>
+<div class="tab" id="experience-key">Experience</div>
+<div class="tab active" id="design-key">Design</div>
+</div>
+
+<div class="keyboard">
+<div class="keyboard-row">
+<div class="key">Q</div>
+<div class="key">W</div>
+<div class="key">E</div>
+<div class="key">R</div>
+<div class="key">T</div>
+<div class="key">Y</div>
+<div class="key">U</div>
+<div class="key">I</div>
+<div class="key">O</div>
+<div class="key">P</div>
+</div>
+<div class="keyboard-row row-2">
+<div class="key">A</div>
+<div class="key">S</div>
+<div class="key">D</div>
+<div class="key">F</div>
+<div class="key">G</div>
+<div class="key">H</div>
+<div class="key">J</div>
+<div class="key">K</div>
+<div class="key">L</div>
+</div>
+<div class="keyboard-row">
+<div class="key special">⇧</div>
+<div class="key">Z</div>
+<div class="key">X</div>
+<div class="key">C</div>
+<div class="key">V</div>
+<div class="key">B</div>
+<div class="key">N</div>
+<div class="key">M</div>
+<div class="key special">⌫</div>
+</div>
+<div class="keyboard-row">
+<div class="key special extra-wide-key" id="toggle-key">123</div>
+<div class="key extra-wide" id="space-key">space</div>
+<div class="key special extra-wide-key" id="send-key">send</div>
+</div>
+<div class="home-indicator">
+<div class="home-bar"></div>
+</div>
+</div>
+
+<div class="sticker-keyboard" id="stickerKeyboard">
+    <div class="sticker-nav">
+        <div class="sticker-nav-item"><img src="search.svg" alt="search"></div>
+        <div class="sticker-nav-item active"><img src="save.svg" alt="save"></div>
+        <div class="sticker-nav-item"><img src="emoji.svg" alt="emoji"></div>
+        <div class="sticker-nav-item"><img src="my_avatar.png" alt="avatar"></div>
+        <div class="sticker-nav-item"><img src="ai_self.jpg" alt="ai self"></div>
+        <div class="sticker-nav-item"><img src="set1.jpg" alt="set 1"></div>
+        <div class="sticker-nav-item"><img src="set2.png" alt="set 2"></div>
+    </div>
+    <div class="sticker-keyboard-handle"></div>
+    <div class="sticker-content">
+        <div class="sticker-section-title">Recently used</div>
+        <div class="sticker-grid">
+            <div class="sticker-grid-item sticker-item" data-sticker="10"><img src="sticker 10.png"></div>
+            <div class="sticker-grid-item sticker-item" data-sticker="3"><img src="sticker 3.png"></div>
+            <div class="sticker-grid-item sticker-item" data-sticker="5"><img src="sticker 5.png"></div>
+            <div class="sticker-grid-item sticker-item" data-sticker="9"><img src="sticker 9.png"></div>
+        </div>
+        
+        <div class="sticker-section-title">Favorites</div>
+        <div class="sticker-grid">
+            <div class="sticker-grid-item add-favorite-btn">+</div>
+            <div class="sticker-grid-item sticker-item" data-sticker="5"><img src="sticker 5.png"></div>
+            <div class="sticker-grid-item sticker-item" data-sticker="8"><img src="sticker 8.png"></div>
+            <div class="sticker-grid-item sticker-item" data-sticker="9"><img src="sticker 9.png"></div>
+            <div class="sticker-grid-item sticker-item" data-sticker="10"><img src="sticker 10.png"></div>
+        </div>
+    </div>
+    <div class="sticker-home-indicator">
+        <div class="home-bar"></div>
+    </div>
+</div>
+
+</div>
+<script>
+const stickerRecs = document.getElementById('stickerRecs');
+const chatArea = document.getElementById('chatArea');
+const textInput = document.querySelector('.text-input');
+const toast = document.getElementById('toast');
+const allStickerItems = document.querySelectorAll('#stickerRecs .sticker-item');
+const albumIcon = document.querySelector('.album-icon'); // Select Album Icon
+
+// New Variables for Sticker View
+const stickerIcon = document.querySelector('.sticker-icon');
+const keyboard = document.querySelector('.keyboard');
+const stickerKeyboard = document.getElementById('stickerKeyboard');
+const bottomTabs = document.querySelector('.bottom-tabs');
+
+// Function to handle sticker click
+function handleStickerClick(stickerId) {
+    const stickerImg = `sticker ${stickerId}.png`;
+    
+    // Hide the favorite icon on the previous sticker message (if any)
+    const allMessages = chatArea.querySelectorAll('.message.sent');
+    if (allMessages.length > 0) {
+        const lastMessage = allMessages[allMessages.length - 1];
+        const favoriteIcon = lastMessage.querySelector('.favorite-icon');
+        if (favoriteIcon && !favoriteIcon.classList.contains('dismissed')) {
+            favoriteIcon.classList.add('dismissed');
+            setTimeout(() => {
+                favoriteIcon.style.display = 'none';
+            }, 200);
+        }
+    }
+    
+    // Hide sticker recommendations
+    stickerRecs.classList.add('hidden');
+    
+    // Clear input
+    textInput.value = '';
+    
+    // Show Album Icon (reset visibility)
+    if(albumIcon) albumIcon.style.visibility = 'visible';
+    
+    // Reset camera icon to default
+    const cameraIcon = document.querySelector('.input-icon-img');
+    if(cameraIcon) cameraIcon.src = 'camera_default.svg';
+    
+    // Replace send icon with microphone icon
+    const sendBtnIcon = document.querySelector('.send-btn-icon');
+    if (sendBtnIcon) {
+        sendBtnIcon.src = 'microphone.svg';
+        sendBtnIcon.alt = 'microphone';
+        sendBtnIcon.classList.remove('send-btn-icon');
+        sendBtnIcon.classList.add('microphone-icon');
+    }
+    
+    // Add sticker to front of Recently Used grid
+    const recentlyUsedGrid = document.querySelector('.sticker-content .sticker-grid');
+    if (recentlyUsedGrid) {
+        // Remove duplicate if this sticker is already in recently used
+        const existingRecent = recentlyUsedGrid.querySelector(`[data-sticker="${stickerId}"]`);
+        if (existingRecent) existingRecent.remove();
+        
+        // Create new sticker grid item
+        const newRecent = document.createElement('div');
+        newRecent.className = 'sticker-grid-item sticker-item';
+        newRecent.setAttribute('data-sticker', stickerId);
+        newRecent.innerHTML = `<img src="${stickerImg}">`;
+        
+        // Insert at the front
+        recentlyUsedGrid.insertBefore(newRecent, recentlyUsedGrid.firstChild);
+        
+        // Cap at 4 stickers
+        while (recentlyUsedGrid.children.length > 4) {
+            recentlyUsedGrid.removeChild(recentlyUsedGrid.lastChild);
+        }
+    }
+    
+    // Create new sticker message
+    setTimeout(() => {
+        const newMessage = document.createElement('div');
+        newMessage.className = 'message sent new';
+        newMessage.innerHTML = `
+            <img src="sticker_plus.svg" class="favorite-icon" alt="Favorite">
+            <div class="message-bubble message-sticker">
+                <img src="${stickerImg}" alt="Sticker">
+            </div>
+        `;
+        
+        chatArea.appendChild(newMessage);
+        // Scroll to bottom
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }, 50);
+}
+
+// Event delegation for sticker clicks (Handles both Recommendations AND New Sticker View)
+document.addEventListener('click', function(e) {
+    const stickerItem = e.target.closest('.sticker-item');
+    if (stickerItem) {
+        const stickerId = stickerItem.getAttribute('data-sticker');
+        handleStickerClick(stickerId);
+    }
+});
+
+// Event Delegation for clicking the favorite icon (since it's dynamically added)
+chatArea.addEventListener('click', function(e) {
+    if (e.target.classList.contains('favorite-icon')) {
+        const icon = e.target;
+        
+        // Get the sticker image src from the sibling message bubble
+        const parentMessage = icon.closest('.message');
+        const stickerImg = parentMessage.querySelector('.message-sticker img');
+        const stickerSrc = stickerImg ? stickerImg.getAttribute('src') : null;
+        
+        // Check if sticker already exists in favorites
+        let alreadyFavorited = false;
+        
+        if (stickerSrc) {
+            const match = stickerSrc.match(/sticker\s*(\d+)\.png/);
+            const stickerId = match ? match[1] : Date.now();
+            
+            const stickerGrids = document.querySelectorAll('.sticker-content .sticker-grid');
+            const favoritesGrid = stickerGrids[1];
+            
+            if (favoritesGrid) {
+                const existing = favoritesGrid.querySelector(`[data-sticker="${stickerId}"]`);
+                if (existing) {
+                    alreadyFavorited = true;
+                } else {
+                    // Add sticker to front of Favorites grid
+                    const newFav = document.createElement('div');
+                    newFav.className = 'sticker-grid-item sticker-item';
+                    newFav.setAttribute('data-sticker', stickerId);
+                    newFav.innerHTML = `<img src="${stickerSrc}">`;
+                    
+                    const addBtn = favoritesGrid.querySelector('.add-favorite-btn');
+                    if (addBtn) {
+                        addBtn.insertAdjacentElement('afterend', newFav);
+                    } else {
+                        favoritesGrid.insertBefore(newFav, favoritesGrid.firstChild);
+                    }
+                }
+            }
+        }
+        
+        // Show appropriate toast
+        const toastImg = toast.querySelector('.toast-img');
+        const toastImgAgain = toast.querySelector('.toast-img-again');
+        if (alreadyFavorited) {
+            toastImg.style.display = 'none';
+            toastImgAgain.style.display = 'block';
+        } else {
+            toastImg.style.display = 'block';
+            toastImgAgain.style.display = 'none';
+        }
+        toast.classList.add('show');
+        
+        // Dismiss (Hide) the icon
+        icon.classList.add('dismissed');
+        setTimeout(() => {
+            icon.style.display = 'none';
+        }, 200);
+
+        // Hide Toast after 2 seconds
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2000);
+    }
+});
+
+// Listen for input changes to show stickers AND toggle icons
+textInput.addEventListener('input', function() {
+    const rawValue = this.value;
+    const lowerValue = rawValue.toLowerCase().trim();
+    const btnIcon = document.querySelector('.send-btn img'); 
+    
+    // If typing, ensure we are in Keyboard Mode (Hide Sticker View)
+    keyboard.style.display = 'block';
+    stickerKeyboard.style.display = 'none';
+    bottomTabs.style.display = 'flex';
+
+    const cameraIcon = document.querySelector('.input-icon-img');
+    
+    if (rawValue.trim().length > 0) {
+        // User is typing -> Show Send Icon
+        btnIcon.src = 'send.svg';
+        btnIcon.alt = 'send';
+        btnIcon.className = 'send-btn-icon'; 
+        
+        // Hide Album Icon using visibility to prevent layout shift
+        if(albumIcon) albumIcon.style.visibility = 'hidden'; 
+        
+        // Switch to camera.svg when text is present
+        if(cameraIcon) cameraIcon.src = 'camera.svg';
+    } else {
+        // Input is empty -> Show Microphone Icon
+        btnIcon.src = 'microphone.svg';
+        btnIcon.alt = 'microphone';
+        btnIcon.className = 'microphone-icon'; 
+        
+        // Show Album Icon using visibility
+        if(albumIcon) albumIcon.style.visibility = 'visible';
+        
+        // Switch back to camera_default.svg when empty
+        if(cameraIcon) cameraIcon.src = 'camera_default.svg';
+    }
+    
+    // Sticker Recommendation Logic
+    if (lowerValue === 'tired' || lowerValue === 'happy') {
+        allStickerItems.forEach(item => {
+            const keyword = item.getAttribute('data-keyword');
+            if (keyword === lowerValue) {
+                item.style.display = 'block';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        stickerRecs.classList.remove('hidden');
+    } else {
+        stickerRecs.classList.add('hidden');
+    }
+});
+
+// Logic to Toggle Sticker Keyboard
+stickerIcon.addEventListener('click', function() {
+    if (keyboard.style.display !== 'none') {
+        // Switching to Sticker View
+        keyboard.style.display = 'none';
+        stickerKeyboard.style.display = 'flex';
+        bottomTabs.style.display = 'none';
+        stickerRecs.classList.add('hidden');
+        stickerIcon.src = 'keyboard.svg';
+        stickerIcon.alt = 'keyboard';
+    } else {
+        // Switching back to Keyboard View
+        keyboard.style.display = 'block';
+        stickerKeyboard.style.display = 'none';
+        bottomTabs.style.display = 'flex';
+        stickerIcon.src = 'sticker.svg';
+        stickerIcon.alt = 'emoji';
+    }
+});
+
+// Switch back to Keyboard when Text Input is focused
+textInput.addEventListener('focus', function() {
+    keyboard.style.display = 'block';
+    stickerKeyboard.style.display = 'none';
+    bottomTabs.style.display = 'flex';
+    stickerIcon.src = 'sticker.svg';
+    stickerIcon.alt = 'emoji';
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat Prototype</title>
+<style>
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
+body {
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+background: #f5f5f5;
+overflow: hidden;
+}
+.phone-container {
+width: 375px;
+height: 750px;
+margin: 20px auto;
+background: #f5f5f5;
+border-radius: 0px;
+box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+overflow: hidden;
+position: relative;
+display: flex;
+flex-direction: column;
+}
+/* Status Bar */
+.status-bar {
+height: 44px;
+background: #f5f5f5;
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 0 20px;
+font-size: 15px;
+font-weight: 600;
+margin-left: 10px;
+}
+.status-icons {
+display: flex;
+gap: 5px;
+align-items: center;
+margin-right: 10px;
+}
+/* Header */
+.header {
+background: #f5f5f5;
+padding: 10px 16px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+border-bottom: 1px solid #e0e0e0;
+z-index: 20; /* Ensure header stays above scrolled content */
+}
+.header-left {
+display: flex;
+align-items: center;
+gap: 12px;
+}
+.back-btn {
+font-size: 24px;
+color: #333;
+cursor: url('finger.svg'), auto;
+margin-right: 10px;
+margin-left: 2px;
+}
+.profile-section {
+display: flex;
+align-items: center;
+gap: 10px;
+}
+.profile-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #ddd;
+  position: relative;
+  background-image: url('avatar.png'); 
+  background-size: cover;
+  background-position: center;
+}
+.online-indicator {
+width: 12px;
+height: 12px;
+background: #00d856;
+border-radius: 50%;
+position: absolute;
+bottom: 0;
+right: 0;
+border: 2px solid #f5f5f5;
+}
+.profile-info h3 {
+font-size: 17px;
+font-weight: 600;
+}
+.profile-info p {
+font-size: 13px;
+color: #8e8e93;
+}
+.header-right {
+display: flex;
+gap: 20px;
+font-size: 24px;
+color: #333;
+}
+/* Chat Area */
+.chat-area {
+flex: 1;
+overflow-y: hidden;
+padding: 16px 16px 0px 16px;
+background: #f5f5f5;
+display: flex;
+flex-direction: column;
+justify-content: flex-end;
+position: relative;
+}
+.message {
+margin-bottom: 16px;
+display: flex;
+align-items: flex-start;
+gap: 8px;
+}
+.message.received {
+justify-content: flex-start;
+}
+.message.sent {
+justify-content: flex-end;
+}
+.message.sent + .message.sent {
+margin-top: -8px;
+}
+.message-avatar {
+width: 32px;
+height: 32px;
+border-radius: 50%;
+background: #ddd;
+flex-shrink: 0;
+background-image: url('avatar.png');
+background-size: cover;
+background-position: center;
+}
+.message.sent .message-avatar {
+display: none;
+}
+.message-bubble {
+max-width: 70%;
+padding: 12px 16px;
+border-radius: 20px;
+font-size: 16px;
+line-height: 1.4;
+position: relative;
+}
+.message.received .message-bubble {
+background: white;
+border-bottom-left-radius: 4px;
+}
+.message.sent .message-bubble {
+background: #00b4d8;
+color: white;
+border-bottom-right-radius: 4px;
+border-top-right-radius: 4px;
+}
+.message.received + .message.sent .message-bubble {
+border-top-right-radius: 20px;
+}
+.message-reaction {
+position: absolute;
+bottom: -8px;
+right: -8px;
+background: white;
+border-radius: 50%;
+width: 24px;
+height: 24px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 16px;
+box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.timestamp {
+text-align: center;
+color: #8e8e93;
+font-size: 13px;
+margin: 20px 0;
+}
+.message-sticker {
+padding: 0;
+background: transparent !important;
+max-width: 150px;
+}
+.message-sticker img {
+width: 120px;
+height: 120px;
+border-radius: 12px;
+}
+/* Favorite Icon Style */
+.favorite-icon {
+    width: 30px;
+    height: 30px;
+    align-self: center;
+    cursor: url('finger.svg'), auto;
+    opacity: 0.8;
+    margin-right: 3px; 
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.favorite-icon:active {
+    transform: scale(0.8);
+}
+.favorite-icon.dismissed {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0);
+}
+
+/* Toast Notification */
+.toast-container {
+    position: absolute;
+    top: 100px; /* Positioned just below the header */
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.toast {
+    background: transparent;
+    border-radius: 14px;
+    padding: 8px 16px;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.toast img {
+    height: 40px; /* Adjust based on your png size */
+    width: auto;
+    display: block;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 14px;
+}
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Sticker Recommendations */
+.sticker-recommendations {
+background: #F5F5F5;
+border-top: none;
+padding: 8px 16px;
+transition: all 0.3s ease;
+overflow: hidden;
+position: absolute;
+bottom: 335px;
+left: 0;
+right: 0;
+z-index: 10;
+}
+.sticker-recommendations.hidden {
+max-height: 0;
+padding: 0;
+opacity: 0;
+}
+.sticker-scroll {
+display: flex;
+gap: 12px;
+overflow-x: auto;
+-webkit-overflow-scrolling: touch;
+scrollbar-width: none;
+}
+.sticker-scroll::-webkit-scrollbar {
+display: none;
+}
+.sticker-item {
+flex-shrink: 0;
+width: 60px;
+height: 60px;
+cursor: url('finger.svg'), auto;
+transition: transform 0.2s;
+border-radius: 12px;
+overflow: hidden;
+}
+.sticker-item:active {
+transform: scale(0.95);
+}
+.sticker-item img {
+width: 100%;
+height: 100%;
+cursor: url('finger.svg'), auto;
+object-fit: cover;
+}
+/* Input Area */
+.input-area {
+background: #F5F5F5;
+border-top: none;
+padding: 8px 16px;
+display: flex;
+align-items: center;
+gap: 12px;
+}
+.input-icon {
+font-size: 28px;
+color: #666;
+cursor: url('finger.svg'), auto;
+}
+.input-icon-img {
+width: 24px;
+height: 24px;
+cursor: url('finger.svg'), auto;
+}
+.text-input-container {
+flex: 1;
+display: flex;
+align-items: center;
+gap: 8px;
+background: white;
+border-radius: 20px;
+padding: 0 12px;
+}
+.text-input {
+flex: 1;
+padding: 10px 4px;
+background: transparent;
+border: none;
+font-size: 16px;
+outline: none;
+}
+.send-btn {
+width: 32px;
+height: 32px;
+background: transparent;
+border-radius: 50%;
+display: flex;
+align-items: center;
+justify-content: center;
+color: white;
+cursor: url('finger.svg'), auto;
+}
+.send-btn-icon {
+width: 100%;
+height: 100%;
+object-fit: contain;
+}
+font-size: 20px;
+cursor: url('finger.svg'), auto;
+}
+/* Bottom Tabs */
+.bottom-tabs {
+background-color: #D1D5DC !important;
+background: #D1D5DC !important;
+border-top: 1px solid #B0B5BB;
+display: flex !important;
+flex-direction: row !important;
+height: 50px;
+align-items: center;
+justify-content: center;
+font-size: 15px;
+color: #000;
+width: 100%;
+}
+.tab {
+padding: 8px 20px;
+position: relative;
+flex: 1;
+text-align: center;
+white-space: nowrap;
+display: inline-block;
+}
+.tab:not(:last-child)::after {
+content: '';
+position: absolute;
+right: 0;
+top: 50%;
+transform: translateY(-50%);
+height: 30px;
+width: 1px;
+background: #999;
+}
+.tab.active {
+color: #000;
+}
+/* Keyboard */
+.keyboard {
+background: #D1D5DC;
+padding: 8px 4px 12px;
+}
+.keyboard-suggestions {
+display: flex;
+justify-content: center;
+gap: 8px;
+margin-bottom: 8px;
+padding: 0 8px;
+}
+.suggestion {
+padding: 6px 12px;
+background: white;
+border-radius: 6px;
+font-size: 14px;
+border: 1px solid #999;
+}
+.keyboard-row {
+display: flex;
+justify-content: center;
+gap: 6px;
+margin-bottom: 8px;
+padding: 0 4px;
+}
+.keyboard-row.row-2 {
+padding: 0 20px;
+}
+.key {
+flex: 1;
+height: 42px;
+background: white;
+border-radius: 6px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 22px;
+font-weight: 400;
+box-shadow: 0 1px 0 rgba(0,0,0,0.3);
+}
+.key.wide {
+flex: 2.5;
+font-size: 16px;
+}
+.key.extra-wide-key {
+flex: 4.5;
+font-size: 14px;
+}
+.key.extra-wide {
+flex: 10;
+font-size: 14px;
+}
+.key.special {
+background: #aeb3b8;
+font-size: 18px;
+}
+.home-indicator {
+height: 20px;
+display: flex;
+align-items: flex-start;
+justify-content: center;
+background: #D1D5DC;
+padding-top: 20px;
+}
+.home-bar {
+width: 134px;
+height: 5px;
+background: #1c1c1e;
+border-radius: 3px;
+}
+@keyframes slideInMessage {
+from {
+opacity: 1;
+transform: translateY(10px);
+}
+to {
+opacity: 1;
+transform: translateY(0);
+}
+}
+.message.new {
+animation: slideInMessage 0.2s ease;
+}
+#return-key {
+    font-size: 14px; 
+    font-weight: 350;
+    text-transform: lowercase;
+}
+#toggle-key {
+    font-size: 14px; 
+    font-weight: 350;
+    text-transform: lowercase;
+}
+#space-key {
+    font-size: 14px; 
+    font-weight: 350;
+    text-transform: lowercase;
+}
+#tiktok-key {
+    font-size: 15px; 
+    font-weight: 350;
+    text-transform: capitalize;
+}
+#experience-key {
+    font-size: 15px; 
+    font-weight: 350;
+    text-transform: capitalize;
+}
+#design-key {
+    font-size: 15px; 
+    font-weight: 350;
+    text-transform: capitalize;
+}
+.phone-container {
+    /* Replace 'finger.png' with your actual filename */
+    cursor: url('finger.svg'), auto;
+}
+
+</style>
+</head>
+<body>
+<div class="phone-container">
+<div class="toast-container">
+    <div class="toast" id="toast">
+        <img src="toast.png" alt="Notification">
+    </div>
+</div>
+
+<div class="status-bar">
+<span>8:00</span>
+<div class="status-icons">
+<img src="status.png" style="height: 12px; width: auto;">
+</div>
+</div>
+<div class="header">
+<div class="header-left">
+<div class="back-btn">
+    <img src="back.svg" alt="Back">
+</div>
+<div class="profile-section">
+<div class="profile-pic">
+<div class="online-indicator"></div>
+</div>
+<div class="profile-info">
+<h3>Thomas 🔥<span style="color: #FF6613; font-weight: 500;">3</span></h3>
+<p><span style="color: #858585; font-weight: 320;">Active now</span></p>
+</div>
+</div>
+</div>
+<div class="header-right">
+<span><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M3.05371 3.10538C5.92644 1.67261 9.85843 1.24172 12.5811 3.18643C14.7671 4.74786 17.7947 4.20374 20.0527 3.10538C20.7058 2.77912 21.5 3.27041 21.5 3.99991V14.9999C21.5 15.3786 21.286 15.7251 20.9473 15.8944C18.0372 17.3495 14.2034 17.8023 11.4189 15.8134C9.40399 14.3741 6.65886 14.8072 4.5 15.6562V21.9999C4.49998 22.276 4.27613 22.4999 4 22.4999H3C2.72387 22.4999 2.50002 22.276 2.5 21.9999V3.99991C2.5 3.6245 2.71794 3.27311 3.05371 3.10538ZM11.4189 4.81339C9.41587 3.38263 6.65726 3.80786 4.5 4.65616V13.5312C7.13455 12.6639 10.2247 12.5033 12.5811 14.1864C14.596 15.6256 17.3412 15.1926 19.5 14.3437V5.46866C16.8655 6.33594 13.7753 6.49647 11.4189 4.81339Z" fill="black"/>
+</svg></span>
+<span>⋯</span>
+</div>
+</div>
+<div class="chat-area" id="chatArea">
+<div class="message received">
+<div class="message-avatar"></div>
+<div class="message-bubble">
+Absolutelyyy! The stage was set like an enchanted forest.
+</div>
+</div>
+<div class="message sent">
+<div class="message-bubble">
+This sounds amazing!
+</div>
+</div>
+<div class="message sent">
+<div class="message-bubble">
+Did she sing "Love Story"?
+</div>
+</div>
+<div class="timestamp">9:18 PM</div>
+<div class="message received">
+<div class="message-avatar"></div>
+<div class="message-bubble">
+Yes, hahahah, and when she did, everyone's wristbands lit up!
+</div>
+</div>
+</div>
+<div class="sticker-recommendations" id="stickerRecs">
+<div class="sticker-scroll">
+<div class="sticker-item" data-sticker="1">
+<img src="sticker 1.png">
+</div>
+<div class="sticker-item" data-sticker="2">
+<img src="sticker 2.png">
+</div>
+<div class="sticker-item" data-sticker="3">
+<img src="sticker 3.png">
+</div>
+<div class="sticker-item" data-sticker="4">
+<img src="sticker 4.png">
+</div>
+<div class="sticker-item" data-sticker="5">
+<img src="sticker 5.png">
+</div>
+</div>
+</div>
+<div class="input-area">
+<img src="camera_fill.svg" class="input-icon-img" alt="camera">
+<div class="text-input-container">
+<input type="text" class="text-input" value="Tired" readonly>
+<img src="sticker_circle_fill.svg" class="input-icon-img" alt="emoji">
+<div class="send-btn"><img src="send_button.svg" class="send-btn-icon" alt="send"></div>
+</div>
+</div>
+<div class="bottom-tabs" style="background-color: #D1D5DC !important; display: flex !important; justify-content: center !important; align-items: center !important; padding-top: 8px !important; padding-bottom: 3px !important;">
+<div class="tab" id="tiktok-key">TikTok</div>
+<div class="tab" id="experience-key">Experience</div>
+<div class="tab active" id="design-key">Design</div>
+</div>
+<div class="keyboard">
+<div class="keyboard-row">
+<div class="key">Q</div>
+<div class="key">W</div>
+<div class="key">E</div>
+<div class="key">R</div>
+<div class="key">T</div>
+<div class="key">Y</div>
+<div class="key">U</div>
+<div class="key">I</div>
+<div class="key">O</div>
+<div class="key">P</div>
+</div>
+<div class="keyboard-row row-2">
+<div class="key">A</div>
+<div class="key">S</div>
+<div class="key">D</div>
+<div class="key">F</div>
+<div class="key">G</div>
+<div class="key">H</div>
+<div class="key">J</div>
+<div class="key">K</div>
+<div class="key">L</div>
+</div>
+<div class="keyboard-row">
+<div class="key special">⇧</div>
+<div class="key">Z</div>
+<div class="key">X</div>
+<div class="key">C</div>
+<div class="key">V</div>
+<div class="key">B</div>
+<div class="key">N</div>
+<div class="key">M</div>
+<div class="key special">⌫</div>
+</div>
+<div class="keyboard-row">
+<div class="key special extra-wide-key" id="toggle-key">123</div>
+<div class="key extra-wide" id="space-key">space</div>
+<div class="key special extra-wide-key" id="return-key">return</div>
+</div>
+<div class="home-indicator">
+<div class="home-bar"></div>
+</div>
+</div>
+</div>
+<script>
+const stickerItems = document.querySelectorAll('.sticker-item');
+const stickerRecs = document.getElementById('stickerRecs');
+const chatArea = document.getElementById('chatArea');
+const textInput = document.querySelector('.text-input');
+const toast = document.getElementById('toast');
+
+
+// Event Delegation for clicking the favorite icon (since it's dynamically added)
+chatArea.addEventListener('click', function(e) {
+    if (e.target.classList.contains('favorite-icon')) {
+        const icon = e.target;
+        
+        // 1. Show Toast
+        toast.classList.add('show');
+        
+        // 2. Dismiss (Hide) the icon
+        icon.classList.add('dismissed');
+        // Optional: Remove it from DOM after animation
+        setTimeout(() => {
+            icon.style.display = 'none';
+        }, 200);
+
+        // 3. Hide Toast after 2 seconds
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2000);
+    }
+});
+
+stickerItems.forEach(item => {
+    item.addEventListener('click', function() {
+        const stickerId = this.getAttribute('data-sticker');
+        const stickerImg = `sticker ${stickerId}.png`;
+        
+        // Hide sticker recommendations
+        stickerRecs.classList.add('hidden');
+        
+        // Clear input
+        textInput.value = '';
+        
+        // Create new sticker message
+        setTimeout(() => {
+            const newMessage = document.createElement('div');
+            newMessage.className = 'message sent new';
+            newMessage.innerHTML = `
+                <img src="favorite.png" class="favorite-icon" alt="Favorite">
+                <div class="message-bubble message-sticker">
+                    <img src="${stickerImg}" alt="Sticker">
+                </div>
+            `;
+            
+            chatArea.appendChild(newMessage);
+            // Scroll to bottom
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }, 50);
+    });
+});
+</script>
+</body>
+</html>

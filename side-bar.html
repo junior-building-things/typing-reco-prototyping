@@ -1,0 +1,1557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chat Prototype</title>
+<style>
+* {
+margin: 0;
+padding: 0;
+box-sizing: border-box;
+}
+body {
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+background: #f5f5f5;
+overflow: hidden;
+}
+.phone-container {
+width: 375px;
+height: 750px;
+margin: 20px auto;
+background: #f5f5f5;
+border-radius: 0px;
+box-shadow: 0 10px 50px rgba(0,0,0,0.3);
+overflow: hidden;
+position: relative;
+display: flex;
+flex-direction: column;
+}
+/* Status Bar */
+.status-bar {
+height: 44px;
+background: #f5f5f5;
+display: flex;
+justify-content: space-between;
+align-items: center;
+padding: 0 20px;
+font-size: 15px;
+font-weight: 600;
+margin-left: 10px;
+}
+.status-icons {
+display: flex;
+gap: 5px;
+align-items: center;
+margin-right: 10px;
+}
+/* Header */
+.header {
+background: #f5f5f5;
+padding: 10px 16px;
+display: flex;
+align-items: center;
+justify-content: space-between;
+border-bottom: 1px solid #e0e0e0;
+z-index: 20; /* Ensure header stays above scrolled content */
+}
+.header-left {
+display: flex;
+align-items: center;
+gap: 12px;
+}
+.back-btn {
+font-size: 24px;
+color: #333;
+cursor: url('finger.svg'), auto;
+margin-right: 10px;
+margin-left: 2px;
+}
+.profile-section {
+display: flex;
+align-items: center;
+gap: 10px;
+}
+.profile-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #ddd;
+  position: relative;
+  background-image: url('avatar.png'); 
+  background-size: cover;
+  background-position: center;
+}
+.online-indicator {
+width: 12px;
+height: 12px;
+background: #00d856;
+border-radius: 50%;
+position: absolute;
+bottom: 0;
+right: 0;
+border: 2px solid #f5f5f5;
+}
+.profile-info h3 {
+font-size: 17px;
+font-weight: 600;
+}
+.profile-info p {
+font-size: 13px;
+color: #8e8e93;
+}
+.header-right {
+display: flex;
+gap: 20px;
+font-size: 24px;
+color: #333;
+}
+/* Chat Area */
+.chat-area {
+flex: 1;
+overflow-y: hidden;
+padding: 16px 16px 0px 16px;
+background: #f5f5f5;
+display: flex;
+flex-direction: column;
+justify-content: flex-end;
+position: relative;
+}
+.message {
+margin-bottom: 16px;
+display: flex;
+align-items: flex-end;
+gap: 8px;
+}
+.message.received {
+justify-content: flex-start;
+}
+.message.sent {
+justify-content: flex-end;
+}
+.message.sent + .message.sent {
+margin-top: -8px;
+}
+.message-avatar {
+width: 32px;
+height: 32px;
+border-radius: 50%;
+background: #ddd;
+flex-shrink: 0;
+background-image: url('avatar.png');
+background-size: cover;
+background-position: center;
+}
+.message.sent .message-avatar {
+display: none;
+}
+.message-bubble {
+max-width: 70%;
+padding: 12px 16px;
+border-radius: 20px;
+font-size: 16px;
+line-height: 1.4;
+position: relative;
+}
+.message.received .message-bubble {
+background: white;
+border-bottom-left-radius: 0px;
+}
+.message.received .message-bubble::after {
+content: '';
+position: absolute;
+bottom: -1.5px;
+left: -6.5px;
+width: 7px;
+height: 15px;
+background-color: transparent;
+-webkit-mask-image: url("data:image/svg+xml,%3Csvg width='4' height='9' viewBox='0 0 4 9' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 6.05272C0 7.16539 0.901993 8.06738 2.01466 8.06738H4V-5.74589e-05C4 1.2343 3.43011 2.39952 2.45576 3.15735L0.777786 4.46244C0.287033 4.84414 0 5.43102 0 6.05272Z' fill='white'/%3E%3C/svg%3E");
+-webkit-mask-size: 100% 100%;
+mask-image: url("data:image/svg+xml,%3Csvg width='4' height='9' viewBox='0 0 4 9' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 6.05272C0 7.16539 0.901993 8.06738 2.01466 8.06738H4V-5.74589e-05C4 1.2343 3.43011 2.39952 2.45576 3.15735L0.777786 4.46244C0.287033 4.84414 0 5.43102 0 6.05272Z' fill='white'/%3E%3C/svg%3E");
+mask-size: 100% 100%;
+background: white;
+}
+.message.sent .message-bubble {
+background: #00b4d8;
+color: white;
+border-bottom-right-radius: 4px;
+border-top-right-radius: 4px;
+}
+.message.sent.has-tail .message-bubble:not(.message-sticker) {
+border-bottom-right-radius: 0px;
+}
+.message.sent.has-tail .message-bubble:not(.message-sticker)::after {
+content: '';
+position: absolute;
+bottom: -1.5px;
+right: -6.5px;
+width: 7px;
+height: 15px;
+background-color: transparent;
+-webkit-mask-image: url("data:image/svg+xml,%3Csvg width='4' height='9' viewBox='0 0 4 9' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 6.05272C0 7.16539 0.901993 8.06738 2.01466 8.06738H4V-5.74589e-05C4 1.2343 3.43011 2.39952 2.45576 3.15735L0.777786 4.46244C0.287033 4.84414 0 5.43102 0 6.05272Z' fill='white'/%3E%3C/svg%3E");
+-webkit-mask-size: 100% 100%;
+mask-image: url("data:image/svg+xml,%3Csvg width='4' height='9' viewBox='0 0 4 9' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 6.05272C0 7.16539 0.901993 8.06738 2.01466 8.06738H4V-5.74589e-05C4 1.2343 3.43011 2.39952 2.45576 3.15735L0.777786 4.46244C0.287033 4.84414 0 5.43102 0 6.05272Z' fill='white'/%3E%3C/svg%3E");
+mask-size: 100% 100%;
+transform: scaleX(-1);
+background: #00b4d8;
+}
+.message.received + .message.sent .message-bubble {
+border-top-right-radius: 20px;
+}
+.message-reaction {
+position: absolute;
+bottom: -8px;
+right: -8px;
+background: white;
+border-radius: 50%;
+width: 24px;
+height: 24px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 16px;
+box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.timestamp {
+text-align: center;
+color: #8e8e93;
+font-size: 13px;
+margin: 20px 0;
+}
+.message-sticker {
+padding: 0;
+background: transparent !important;
+max-width: 150px;
+}
+.message-sticker img {
+width: 120px;
+height: 120px;
+border-radius: 12px;
+}
+.text-input {
+cursor: url('finger.svg'), auto;
+}
+.text-input::placeholder,
+.text-input::-webkit-input-placeholder {
+    color: #999;
+    font-weight: 300;
+}
+/* Favorite Icon Style */
+.favorite-icon {
+    width: 30px;
+    height: 30px;
+    align-self: center;
+    cursor: url('finger.svg'), auto;
+    opacity: 0.8;
+    margin-right: 3px; 
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.favorite-icon:active {
+    transform: scale(0.8);
+}
+.favorite-icon.dismissed {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0);
+}
+
+/* Toast Notification */
+.toast-container {
+    position: absolute;
+    top: 100px; /* Positioned just below the header */
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: center;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.toast {
+    background: transparent;
+    border-radius: 14px;
+    padding: 8px 16px;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.toast img {
+    height: 40px; /* Adjust based on your png size */
+    width: auto;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    border-radius: 14px;
+}
+.toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Sticker Recommendations */
+.sticker-recommendations {
+background: #F5F5F5;
+border-top: none;
+padding: 8px 0px;
+transition: width 0.3s ease;
+overflow: hidden;
+border-radius: 12px;
+position: absolute;
+bottom: 335px;
+width: 47%;
+left: auto;
+right: 0;
+z-index: 10;
+}
+.sticker-recommendations.hidden {
+max-height: 0;
+padding: 0;
+opacity: 0;
+}
+.sticker-scroll {
+display: flex;
+gap: 12px;
+overflow-x: auto;
+-webkit-overflow-scrolling: touch;
+scrollbar-width: none;
+padding: 0 16px;
+cursor: url('finger.svg'), auto;
+overscroll-behavior-x: contain;
+transition: transform 0.2s ease-out;
+will-change: transform;
+}
+.sticker-scroll::-webkit-scrollbar {
+display: none;
+}
+.sticker-item {
+flex-shrink: 0;
+width: 60px;
+height: 60px;
+cursor: url('finger.svg'), auto;
+transition: transform 0.2s;
+border-radius: 12px;
+overflow: hidden;
+}
+.sticker-item:active {
+transform: scale(0.95);
+}
+.sticker-search-more {
+flex-shrink: 0;
+width: 60px;
+height: 60px;
+cursor: url('finger.svg'), auto;
+border-radius: 12px;
+overflow: hidden;
+background: #E9E9E9;
+display: flex;
+flex-direction: column;
+align-items: center;
+justify-content: center;
+gap: 3px;
+}
+.sticker-search-more svg {
+width: 22px;
+height: 22px;
+color: #8E8E93;
+}
+.sticker-search-more span {
+font-size: 13px;
+color: #8E8E93;
+font-weight: 400;
+line-height: 1.15;
+text-align: center;
+}
+.sticker-overscroll {
+flex-shrink: 0;
+width: 10px;
+}
+.sticker-item img {
+width: 100%;
+height: 100%;
+cursor: url('finger.svg'), auto;
+object-fit: cover;
+}
+/* Input Area */
+.input-area {
+background: #F5F5F5;
+border-top: none;
+padding: 8px 16px;
+display: flex;
+align-items: center;
+gap: 12px;
+}
+.input-icon {
+font-size: 28px;
+color: #666;
+cursor: url('finger.svg'), auto;
+}
+.input-icon-img {
+width: 30px;
+height: 30px;
+margin-left: -6px;
+cursor: url('finger.svg'), auto;
+}
+.sticker-icon {
+    width: 22px;
+    height: 22px;
+    margin-right: 3px;
+    cursor: url('finger.svg'), auto;
+}
+.album-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px; /* Space between album and sticker */
+    cursor: url('finger.svg'), auto;
+}
+.text-input-container {
+flex: 1;
+display: flex;
+align-items: center;
+gap: 8px;
+background: white;
+border-radius: 20px;
+padding: 0 12px;
+}
+.text-input {
+flex: 1;
+padding: 10px 4px;
+background: transparent;
+border: none;
+font-size: 16px;
+caret-color: #FE2C55;
+outline: none;
+font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+color: #000;
+}
+.text-input::placeholder {
+    color: #999;
+    font-weight: 300;
+}
+.send-btn {
+width: 32px;
+height: 32px;
+background: transparent;
+border-radius: 50%;
+margin-right: -6px;
+display: flex;
+align-items: center;
+justify-content: center;
+color: white;
+cursor: url('finger.svg'), auto;
+}
+.send-btn-icon {
+width: 100%;
+height: 100%;
+object-fit: contain;
+}
+.microphone-icon {
+width: 22px;
+height: 22px;
+object-fit: contain;
+}
+}
+/* Bottom Tabs */
+.bottom-tabs {
+background-color: #D1D5DC !important;
+background: #D1D5DC !important;
+border-top: 1px solid #B0B5BB;
+display: flex !important;
+flex-direction: row !important;
+height: 50px;
+align-items: center;
+justify-content: center;
+font-size: 15px;
+color: #000;
+width: 100%;
+}
+.tab {
+padding: 8px 20px;
+position: relative;
+flex: 1;
+text-align: center;
+white-space: nowrap;
+display: inline-block;
+}
+.tab:not(:last-child)::after {
+content: '';
+position: absolute;
+right: 0;
+top: 50%;
+transform: translateY(-50%);
+height: 30px;
+width: 1px;
+background: #C2C2C2;
+}
+.tab.active {
+color: #000;
+}
+/* Keyboard */
+.keyboard {
+background: #D1D5DC;
+padding: 8px 4px 12px;
+}
+.keyboard-suggestions {
+display: flex;
+justify-content: center;
+gap: 8px;
+margin-bottom: 8px;
+padding: 0 8px;
+}
+.suggestion {
+padding: 6px 12px;
+background: white;
+border-radius: 6px;
+font-size: 14px;
+border: 1px solid #999;
+}
+.keyboard-row {
+display: flex;
+justify-content: center;
+gap: 6px;
+margin-bottom: 8px;
+padding: 0 4px;
+}
+.keyboard-row.row-2 {
+padding: 0 20px;
+}
+.key {
+flex: 1;
+height: 42px;
+background: white;
+border-radius: 6px;
+display: flex;
+align-items: center;
+justify-content: center;
+font-size: 22px;
+font-weight: 400;
+box-shadow: 0 1px 0 rgba(0,0,0,0.3);
+}
+.key.wide {
+flex: 2.5;
+font-size: 16px;
+}
+.key.extra-wide-key {
+flex: 4.5;
+font-size: 14px;
+}
+.key.extra-wide {
+flex: 10;
+font-size: 14px;
+}
+.key.special {
+background: #aeb3b8;
+font-size: 18px;
+}
+.home-indicator {
+height: 20px;
+display: flex;
+align-items: flex-start;
+justify-content: center;
+background: #D1D5DC;
+padding-top: 20px;
+}
+.home-bar {
+width: 134px;
+height: 5px;
+background: #1c1c1e;
+border-radius: 3px;
+}
+@keyframes slideInMessage {
+from {
+opacity: 1;
+transform: translateY(10px);
+}
+to {
+opacity: 1;
+transform: translateY(0);
+}
+}
+.message.new {
+animation: slideInMessage 0.2s ease;
+}
+#toggle-key {
+    font-size: 14px; 
+    font-weight: 350;
+    text-transform: lowercase;
+}
+#space-key {
+    font-size: 14px; 
+    font-weight: 350;
+    text-transform: lowercase;
+}
+#tiktok-key {
+    font-size: 15px; 
+    font-weight: 350;
+    text-transform: capitalize;
+}
+#experience-key {
+    font-size: 15px; 
+    font-weight: 350;
+    text-transform: capitalize;
+}
+#design-key {
+    font-size: 15px; 
+    font-weight: 350;
+    text-transform: capitalize;
+}
+#send-key {
+    font-size: 14px; 
+    font-weight: 350;
+    text-transform: lowercase;
+    background: #007AFF; /* Blue color - change to any color you want */
+    color: white; /* Text color */
+}
+.phone-container {
+    /* Replace 'finger.png' with your actual filename */
+    cursor: url('finger.svg'), auto;
+}
+
+/* --- NEW STICKER KEYBOARD STYLES --- */
+.sticker-keyboard {
+    background: #f5f5f5;
+    height: 284.5px; /* Match keyboard + home-indicator */
+    display: none; /* Hidden by default */
+    flex-direction: column;
+    padding-bottom: 0px;
+    overflow: hidden;
+    position: relative;
+}
+.sticker-keyboard-handle {
+    width: 100%;
+    padding: 5px 0;
+    background: #FFFFFF;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    display: flex;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.sticker-keyboard-handle::after {
+    content: '';
+    width: 40px;
+    height: 4px;
+    background: #E0E0E0;
+    border-radius: 2px;
+}
+.sticker-nav {
+    display: flex;
+    justify-content: space-around;
+    padding: 5px 10px 15px 10px;
+    align-items: center;
+    background: #f5f5f5;
+}
+.sticker-nav-item {
+    font-size: 24px;
+    color: #999;
+    padding: 5px;
+    cursor: url('finger.svg'), auto;
+}
+.sticker-nav-item.active {
+    background: #E8E8E8;
+    border-radius: 8px;
+    color: #333;
+    filter: none;
+    opacity: 1;
+}
+.sticker-nav-item img {
+    width: 21px;
+    height: 21px;
+    object-fit: contain;
+    border-radius: 4px;
+    display: block;
+}
+.sticker-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 16px;
+    scrollbar-width: none; /* Firefox */
+    background: #FFFFFF;
+}
+.sticker-content::-webkit-scrollbar {
+    display: none; /* Chrome/Safari */
+}
+.sticker-section-title {
+    font-size: 13px;
+    color: #888;
+    margin: 16px 0 12px 0;
+    font-weight: 300;
+    margin-left: 2px;
+}
+.sticker-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    justify-items: center;
+    gap: 12px;
+}
+.sticker-grid-item {
+    width: 69px;
+    height: 69px;
+    aspect-ratio: 1;
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: url('finger.svg'), auto;
+}
+.sticker-grid-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.add-favorite-btn {
+    background: #F0F0F0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: #999;
+    font-weight: 300;
+}
+/* ----------------------------------- */
+.sticker-home-indicator {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 10px 0 7px 0;
+    background: transparent;
+    flex-shrink: 0;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+}
+
+/* Sticker Search Panel */
+.sticker-search-panel {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 480px;
+    background: #FFFFFF;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+    overflow: hidden;
+    transform: translateY(100%);
+    transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+    will-change: transform;
+}
+.sticker-search-panel.open {
+    transform: translateY(0);
+}
+.sticker-search-panel .search-panel-bar,
+.sticker-search-panel .search-panel-grid-container {
+    opacity: 0;
+    transform: translateY(12px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.sticker-search-panel.open .search-panel-bar {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 0.12s;
+}
+.sticker-search-panel.open .search-panel-grid-container {
+    opacity: 1;
+    transform: translateY(0);
+    transition-delay: 0.18s;
+}
+.search-panel-grid-item {
+    width: 69px;
+    height: 69px;
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: url('finger.svg'), auto;
+    transition: transform 0.2s;
+}
+.search-panel-grid-item:active {
+    transform: scale(0.93);
+}
+.search-panel-grid-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.search-panel-grid-item.placeholder {
+    background: #F0F0F0;
+    cursor: default;
+}
+.search-panel-grid-item.placeholder:active {
+    transform: none;
+}
+.search-panel-handle {
+    width: 100%;
+    padding: 8px 0;
+    display: flex;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.search-panel-handle::after {
+    content: '';
+    width: 40px;
+    height: 4px;
+    background: #D0D0D0;
+    border-radius: 2px;
+}
+.search-panel-bar {
+    display: flex;
+    align-items: center;
+    margin: 4px 16px 12px 16px;
+    padding: 10px 14px;
+    background: #F0F0F0;
+    border-radius: 12px;
+    gap: 8px;
+    flex-shrink: 0;
+}
+.search-panel-icon {
+    width: 20px;
+    height: 20px;
+    color: #8E8E93;
+    flex-shrink: 0;
+}
+.search-panel-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-size: 16px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color: #000;
+    outline: none;
+}
+.search-panel-input::placeholder {
+    color: #8E8E93;
+}
+.search-panel-clear {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    cursor: url('finger.svg'), auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.search-panel-clear svg {
+    width: 18px;
+    height: 18px;
+}
+.search-panel-grid-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 12px;
+    scrollbar-width: none;
+}
+.search-panel-grid-container::-webkit-scrollbar {
+    display: none;
+}
+.search-panel-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 69px);
+    gap: 8px;
+    justify-content: space-between;
+    justify-items: center;
+    padding-bottom: 30px;
+}
+
+</style>
+</head>
+<body>
+<div class="phone-container">
+<div class="toast-container">
+    <div class="toast" id="toast">
+        <img src="toast.png" alt="Notification" class="toast-img">
+        <img src="toast_again.png" alt="Already saved" class="toast-img-again" style="display:none;">
+    </div>
+</div>
+
+<div class="status-bar">
+<span>8:00</span>
+<div class="status-icons">
+<img src="status.png" style="height: 12px; width: auto;">
+</div>
+</div>
+<div class="header">
+<div class="header-left">
+<div class="back-btn">
+    <img src="back.svg" alt="Back">
+</div>
+<div class="profile-section">
+<div class="profile-pic">
+<div class="online-indicator"></div>
+</div>
+<div class="profile-info">
+<h3>Thomas 🔥<span style="color: #FF6613; font-weight: 500;">3</span></h3>
+<p><span style="color: #858585; font-weight: 320;">Active now</span></p>
+</div>
+</div>
+</div>
+<div class="header-right">
+<span><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M3.05371 3.10538C5.92644 1.67261 9.85843 1.24172 12.5811 3.18643C14.7671 4.74786 17.7947 4.20374 20.0527 3.10538C20.7058 2.77912 21.5 3.27041 21.5 3.99991V14.9999C21.5 15.3786 21.286 15.7251 20.9473 15.8944C18.0372 17.3495 14.2034 17.8023 11.4189 15.8134C9.40399 14.3741 6.65886 14.8072 4.5 15.6562V21.9999C4.49998 22.276 4.27613 22.4999 4 22.4999H3C2.72387 22.4999 2.50002 22.276 2.5 21.9999V3.99991C2.5 3.6245 2.71794 3.27311 3.05371 3.10538ZM11.4189 4.81339C9.41587 3.38263 6.65726 3.80786 4.5 4.65616V13.5312C7.13455 12.6639 10.2247 12.5033 12.5811 14.1864C14.596 15.6256 17.3412 15.1926 19.5 14.3437V5.46866C16.8655 6.33594 13.7753 6.49647 11.4189 4.81339Z" fill="black"/>
+</svg></span>
+<span>⋯</span>
+</div>
+</div>
+<div class="chat-area" id="chatArea">
+<div class="message received">
+<div class="message-avatar"></div>
+<div class="message-bubble">
+Absolutelyyy! The stage was set like an enchanted forest.
+</div>
+</div>
+<div class="message sent">
+<div class="message-bubble">
+This sounds amazing!
+</div>
+</div>
+<div class="message sent has-tail">
+<div class="message-bubble">
+Did she sing "Love Story"?
+</div>
+</div>
+<div class="timestamp">9:18 PM</div>
+<div class="message received">
+<div class="message-avatar"></div>
+<div class="message-bubble">
+Yes, hahahah, and when she did, everyone's wristbands lit up!
+</div>
+</div>
+</div>
+<div class="sticker-recommendations hidden" id="stickerRecs">
+<div class="sticker-scroll" id="stickerScrollTrack">
+    </div>
+</div>
+<div class="input-area">
+<div class="text-input-container">
+<img src="camera_default.svg" class="input-icon-img" alt="camera">
+<input type="text" class="text-input" value="" placeholder="Message...">
+<img src="album.svg" class="album-icon" alt="album">
+<img src="sticker.svg" class="sticker-icon" alt="emoji">
+<div class="send-btn"><img src="microphone.svg" class="microphone-icon" alt="microphone"></div>
+</div>
+</div>
+<div class="bottom-tabs" style="background-color: #D1D5DC !important; display: flex !important; justify-content: center !important; align-items: center !important; padding-top: 8px !important; padding-bottom: 3px !important;">
+<div class="tab" id="tiktok-key">TikTok</div>
+<div class="tab" id="experience-key">Experience</div>
+<div class="tab active" id="design-key">Design</div>
+</div>
+
+<div class="keyboard">
+<div class="keyboard-row">
+<div class="key">Q</div>
+<div class="key">W</div>
+<div class="key">E</div>
+<div class="key">R</div>
+<div class="key">T</div>
+<div class="key">Y</div>
+<div class="key">U</div>
+<div class="key">I</div>
+<div class="key">O</div>
+<div class="key">P</div>
+</div>
+<div class="keyboard-row row-2">
+<div class="key">A</div>
+<div class="key">S</div>
+<div class="key">D</div>
+<div class="key">F</div>
+<div class="key">G</div>
+<div class="key">H</div>
+<div class="key">J</div>
+<div class="key">K</div>
+<div class="key">L</div>
+</div>
+<div class="keyboard-row">
+<div class="key special">⇧</div>
+<div class="key">Z</div>
+<div class="key">X</div>
+<div class="key">C</div>
+<div class="key">V</div>
+<div class="key">B</div>
+<div class="key">N</div>
+<div class="key">M</div>
+<div class="key special">⌫</div>
+</div>
+<div class="keyboard-row">
+<div class="key special extra-wide-key" id="toggle-key">123</div>
+<div class="key extra-wide" id="space-key">space</div>
+<div class="key special extra-wide-key" id="send-key">send</div>
+</div>
+<div class="home-indicator">
+<div class="home-bar"></div>
+</div>
+</div>
+
+<div class="sticker-keyboard" id="stickerKeyboard">
+    <div class="sticker-nav">
+        <div class="sticker-nav-item"><img src="search.svg" alt="search"></div>
+        <div class="sticker-nav-item active"><img src="save.svg" alt="save"></div>
+        <div class="sticker-nav-item"><img src="emoji.svg" alt="emoji"></div>
+        <div class="sticker-nav-item"><img src="my_avatar.png" alt="avatar"></div>
+        <div class="sticker-nav-item"><img src="ai_self.jpg" alt="ai self"></div>
+        <div class="sticker-nav-item"><img src="set1.jpg" alt="set 1"></div>
+        <div class="sticker-nav-item"><img src="set2.png" alt="set 2"></div>
+    </div>
+    <div class="sticker-keyboard-handle"></div>
+    <div class="sticker-content">
+        <div class="sticker-section-title">Recently used</div>
+        <div class="sticker-grid">
+            <div class="sticker-grid-item sticker-item" data-sticker="10"><img src="sticker 10.png"></div>
+            <div class="sticker-grid-item sticker-item" data-sticker="3"><img src="sticker 3.png"></div>
+            <div class="sticker-grid-item sticker-item" data-sticker="5"><img src="sticker 5.png"></div>
+            <div class="sticker-grid-item sticker-item" data-sticker="9"><img src="sticker 9.png"></div>
+        </div>
+        
+        <div class="sticker-section-title">Favorites</div>
+        <div class="sticker-grid">
+            <div class="sticker-grid-item add-favorite-btn">+</div>
+            <div class="sticker-grid-item sticker-item" data-sticker="5"><img src="sticker 5.png"></div>
+            <div class="sticker-grid-item sticker-item" data-sticker="8"><img src="sticker 8.png"></div>
+            <div class="sticker-grid-item sticker-item" data-sticker="9"><img src="sticker 9.png"></div>
+            <div class="sticker-grid-item sticker-item" data-sticker="10"><img src="sticker 10.png"></div>
+        </div>
+    </div>
+    <div class="sticker-home-indicator">
+        <div class="home-bar"></div>
+    </div>
+</div>
+
+<div class="sticker-search-panel" id="stickerSearchPanel">
+    <div class="search-panel-handle"></div>
+    <div class="search-panel-bar">
+        <svg class="search-panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7"></circle>
+            <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
+        </svg>
+        <input type="text" class="search-panel-input" id="searchPanelInput" placeholder="Search stickers">
+        <div class="search-panel-clear" id="searchPanelClear">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="12" cy="12" r="10" fill="#C7C7CC"/>
+                <path d="M8.5 8.5L15.5 15.5M15.5 8.5L8.5 15.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+        </div>
+    </div>
+    <div class="search-panel-grid-container" id="searchPanelGridContainer">
+        <div class="search-panel-grid" id="searchPanelGrid">
+            </div>
+    </div>
+    <div class="sticker-home-indicator">
+        <div class="home-bar"></div>
+    </div>
+</div>
+
+</div>
+<script>
+// ============================================================
+// CONFIGURABLE STICKER RECOMMENDATION MAP
+// ============================================================
+// Each keyword maps to an array of sticker IDs (up to 10).
+// To add your own stickers, just update this object.
+// The sticker filename is derived as: `sticker ${id}.png`
+// To use custom filenames, change the entries to objects:
+//   e.g. { id: 'custom1', src: 'my_sticker.png' }
+// ============================================================
+const stickerRecommendationMap = {
+    tired: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    happy: [6, 7, 8, 9, 10, 1, 2, 3, 4, 5],
+    // Add more keywords here, e.g.:
+    // sad:   [3, 5, 7, 1, 9, 2, 4, 6, 8, 10],
+    // love:  [8, 6, 10, 2, 4, 1, 3, 5, 7, 9],
+};
+
+// How many stickers to show per swipe page
+const STICKERS_PER_PAGE = 5;
+
+// Helper: resolve a sticker entry to { id, src }
+function resolveStickerEntry(entry) {
+    if (typeof entry === 'object' && entry.src) {
+        return { id: entry.id || entry.src, src: entry.src };
+    }
+    return { id: String(entry), src: `sticker ${entry}.png` };
+}
+
+const stickerRecs = document.getElementById('stickerRecs');
+const stickerScrollTrack = document.getElementById('stickerScrollTrack');
+const chatArea = document.getElementById('chatArea');
+const textInput = document.querySelector('.text-input');
+const toast = document.getElementById('toast');
+const albumIcon = document.querySelector('.album-icon');
+
+// New Variables for Sticker View
+const stickerIcon = document.querySelector('.sticker-icon');
+const keyboard = document.querySelector('.keyboard');
+const stickerKeyboard = document.getElementById('stickerKeyboard');
+const bottomTabs = document.querySelector('.bottom-tabs');
+
+// Build recommendation stickers for a keyword
+function buildStickerRecommendations(keyword) {
+    const ids = stickerRecommendationMap[keyword];
+    if (!ids || ids.length === 0) return;
+
+    stickerScrollTrack.innerHTML = '';
+
+    ids.forEach(entry => {
+        const s = resolveStickerEntry(entry);
+        const item = document.createElement('div');
+        item.className = 'sticker-item';
+        item.setAttribute('data-sticker', s.id);
+        item.innerHTML = `<img src="${s.src}">`;
+        stickerScrollTrack.appendChild(item);
+    });
+
+    // Reset scroll position
+    stickerScrollTrack.scrollLeft = 0;
+
+    // Add "Search more" cell at the end (11th position)
+    const searchMore = document.createElement('div');
+    searchMore.className = 'sticker-search-more';
+    searchMore.innerHTML = `
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="7"></circle>
+            <line x1="16.5" y1="16.5" x2="21" y2="21"></line>
+        </svg>
+        <svg class="arrow-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>More</span>
+    `;
+    stickerScrollTrack.appendChild(searchMore);
+
+    // Allow 50px of overscroll past the last cell
+    const overscroll = document.createElement('div');
+    overscroll.className = 'sticker-overscroll';
+    stickerScrollTrack.appendChild(overscroll);
+
+    updateMoreIconState();
+}
+
+// --- Drag-to-scroll for desktop (mouse) with momentum ---
+let isDragging = false;
+let dragStartX = 0;
+let dragScrollLeft = 0;
+let hasDragged = false;
+let lastDragX = 0;
+let lastDragTime = 0;
+let dragVelocity = 0;
+let momentumAnim = null;
+
+stickerScrollTrack.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    hasDragged = false;
+    dragStartX = e.pageX;
+    lastDragX = e.pageX;
+    lastDragTime = Date.now();
+    dragVelocity = 0;
+    dragScrollLeft = stickerScrollTrack.scrollLeft;
+    stickerScrollTrack.style.userSelect = 'none';
+    if (momentumAnim) cancelAnimationFrame(momentumAnim);
+    e.preventDefault();
+});
+
+document.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    const walk = e.pageX - dragStartX;
+    if (Math.abs(walk) > 3) hasDragged = true;
+    
+    const now = Date.now();
+    const dt = now - lastDragTime;
+    if (dt > 0) {
+        dragVelocity = (lastDragX - e.pageX) / dt;
+    }
+    lastDragX = e.pageX;
+    lastDragTime = now;
+    
+    stickerScrollTrack.scrollLeft = dragScrollLeft - walk;
+    updateStripWidth();
+});
+
+document.addEventListener('mouseup', () => {
+    if (!isDragging) return;
+    isDragging = false;
+    stickerScrollTrack.style.userSelect = '';
+    
+    // Apply momentum, stop at edges
+    let velocity = dragVelocity * 15;
+    const friction = 0.95;
+    
+    function momentumStep() {
+        if (Math.abs(velocity) < 0.5) return;
+        stickerScrollTrack.scrollLeft += velocity;
+        velocity *= friction;
+        momentumAnim = requestAnimationFrame(momentumStep);
+    }
+    
+    if (Math.abs(velocity) > 1) {
+        momentumAnim = requestAnimationFrame(momentumStep);
+    }
+});
+
+// Function to handle sticker click
+function handleStickerClick(stickerId) {
+    const stickerImg = `sticker ${stickerId}.png`;
+    
+    // Hide the favorite icon on the previous sticker message (if any)
+    const allMessages = chatArea.querySelectorAll('.message.sent');
+    if (allMessages.length > 0) {
+        const lastMessage = allMessages[allMessages.length - 1];
+        const favoriteIcon = lastMessage.querySelector('.favorite-icon');
+        if (favoriteIcon && !favoriteIcon.classList.contains('dismissed')) {
+            favoriteIcon.classList.add('dismissed');
+            setTimeout(() => {
+                favoriteIcon.style.display = 'none';
+            }, 200);
+        }
+    }
+    
+    // Hide sticker recommendations
+    stickerRecs.classList.add('hidden');
+    stickerRecs.style.width = '';
+
+    // Close search panel if open
+    closeStickerSearchPanel();
+    
+    // Clear input
+    textInput.value = '';
+    
+    // Show Album Icon (reset visibility)
+    if(albumIcon) albumIcon.style.visibility = 'visible';
+    
+    // Reset camera icon to default
+    const cameraIcon = document.querySelector('.input-icon-img');
+    if(cameraIcon) cameraIcon.src = 'camera_default.svg';
+    
+    // Replace send icon with microphone icon
+    const sendBtnIcon = document.querySelector('.send-btn-icon');
+    if (sendBtnIcon) {
+        sendBtnIcon.src = 'microphone.svg';
+        sendBtnIcon.alt = 'microphone';
+        sendBtnIcon.classList.remove('send-btn-icon');
+        sendBtnIcon.classList.add('microphone-icon');
+    }
+    
+    // Add sticker to front of Recently Used grid
+    const recentlyUsedGrid = document.querySelector('.sticker-content .sticker-grid');
+    if (recentlyUsedGrid) {
+        const existingRecent = recentlyUsedGrid.querySelector(`[data-sticker="${stickerId}"]`);
+        if (existingRecent) existingRecent.remove();
+        
+        const newRecent = document.createElement('div');
+        newRecent.className = 'sticker-grid-item sticker-item';
+        newRecent.setAttribute('data-sticker', stickerId);
+        newRecent.innerHTML = `<img src="${stickerImg}">`;
+        
+        recentlyUsedGrid.insertBefore(newRecent, recentlyUsedGrid.firstChild);
+        
+        while (recentlyUsedGrid.children.length > 4) {
+            recentlyUsedGrid.removeChild(recentlyUsedGrid.lastChild);
+        }
+    }
+    
+    // Create new sticker message
+    setTimeout(() => {
+        const newMessage = document.createElement('div');
+        newMessage.className = 'message sent new';
+        newMessage.innerHTML = `
+            <img src="sticker_plus.svg" class="favorite-icon" alt="Favorite">
+            <div class="message-bubble message-sticker">
+                <img src="${stickerImg}" alt="Sticker">
+            </div>
+        `;
+        
+        chatArea.appendChild(newMessage);
+        chatArea.scrollTop = chatArea.scrollHeight;
+    }, 50);
+}
+
+// Event delegation for sticker clicks
+document.addEventListener('click', function(e) {
+    const stickerItem = e.target.closest('.sticker-item');
+    if (stickerItem) {
+        // If user was dragging the recommendation strip, don't fire sticker click
+        const isFromStickerScroll = !!stickerItem.closest('#stickerScrollTrack');
+        if (isFromStickerScroll && hasDragged) {
+            hasDragged = false;
+            return;
+        }
+        const stickerId = stickerItem.getAttribute('data-sticker');
+        handleStickerClick(stickerId);
+    }
+});
+
+// Event Delegation for clicking the favorite icon
+chatArea.addEventListener('click', function(e) {
+    if (e.target.classList.contains('favorite-icon')) {
+        const icon = e.target;
+        
+        const parentMessage = icon.closest('.message');
+        const stickerImg = parentMessage.querySelector('.message-sticker img');
+        const stickerSrc = stickerImg ? stickerImg.getAttribute('src') : null;
+        
+        let alreadyFavorited = false;
+        
+        if (stickerSrc) {
+            const match = stickerSrc.match(/sticker\s*(\d+)\.png/);
+            const stickerId = match ? match[1] : Date.now();
+            
+            const stickerGrids = document.querySelectorAll('.sticker-content .sticker-grid');
+            const favoritesGrid = stickerGrids[1];
+            
+            if (favoritesGrid) {
+                const existing = favoritesGrid.querySelector(`[data-sticker="${stickerId}"]`);
+                if (existing) {
+                    alreadyFavorited = true;
+                } else {
+                    const newFav = document.createElement('div');
+                    newFav.className = 'sticker-grid-item sticker-item';
+                    newFav.setAttribute('data-sticker', stickerId);
+                    newFav.innerHTML = `<img src="${stickerSrc}">`;
+                    
+                    const addBtn = favoritesGrid.querySelector('.add-favorite-btn');
+                    if (addBtn) {
+                        addBtn.insertAdjacentElement('afterend', newFav);
+                    } else {
+                        favoritesGrid.insertBefore(newFav, favoritesGrid.firstChild);
+                    }
+                }
+            }
+        }
+        
+        const toastImg = toast.querySelector('.toast-img');
+        const toastImgAgain = toast.querySelector('.toast-img-again');
+        if (alreadyFavorited) {
+            toastImg.style.display = 'none';
+            toastImgAgain.style.display = 'block';
+        } else {
+            toastImg.style.display = 'block';
+            toastImgAgain.style.display = 'none';
+        }
+        toast.classList.add('show');
+        
+        icon.classList.add('dismissed');
+        setTimeout(() => {
+            icon.style.display = 'none';
+        }, 200);
+
+        setTimeout(() => {
+            toast.classList.remove('show');
+        }, 2000);
+    }
+});
+
+// Listen for input changes to show stickers AND toggle icons
+textInput.addEventListener('input', function() {
+    const rawValue = this.value;
+    const lowerValue = rawValue.toLowerCase().trim();
+    const btnIcon = document.querySelector('.send-btn img'); 
+    
+    // If typing, ensure we are in Keyboard Mode
+    keyboard.style.display = 'block';
+    stickerKeyboard.style.display = 'none';
+    bottomTabs.style.display = 'flex';
+
+    const cameraIcon = document.querySelector('.input-icon-img');
+    
+    if (rawValue.trim().length > 0) {
+        btnIcon.src = 'send.svg';
+        btnIcon.alt = 'send';
+        btnIcon.className = 'send-btn-icon'; 
+        if(albumIcon) albumIcon.style.visibility = 'hidden'; 
+        if(cameraIcon) cameraIcon.src = 'camera.svg';
+    } else {
+        btnIcon.src = 'microphone.svg';
+        btnIcon.alt = 'microphone';
+        btnIcon.className = 'microphone-icon'; 
+        if(albumIcon) albumIcon.style.visibility = 'visible';
+        if(cameraIcon) cameraIcon.src = 'camera_default.svg';
+    }
+    
+    // Sticker Recommendation Logic — now driven by the configurable map
+    if (stickerRecommendationMap[lowerValue]) {
+        buildStickerRecommendations(lowerValue);
+        stickerRecs.classList.remove('hidden');
+    } else {
+        stickerRecs.classList.add('hidden');
+        stickerRecs.style.width = '';
+        closeStickerSearchPanel();
+    }
+});
+
+// Logic to Toggle Sticker Keyboard
+stickerIcon.addEventListener('click', function() {
+    if (keyboard.style.display !== 'none') {
+        keyboard.style.display = 'none';
+        stickerKeyboard.style.display = 'flex';
+        bottomTabs.style.display = 'none';
+        stickerRecs.classList.add('hidden');
+        stickerRecs.style.width = '';
+        stickerIcon.src = 'keyboard.svg';
+        stickerIcon.alt = 'keyboard';
+    } else {
+        keyboard.style.display = 'block';
+        stickerKeyboard.style.display = 'none';
+        bottomTabs.style.display = 'flex';
+        stickerIcon.src = 'sticker.svg';
+        stickerIcon.alt = 'emoji';
+    }
+});
+
+// Switch back to Keyboard when Text Input is focused
+textInput.addEventListener('focus', function() {
+    keyboard.style.display = 'block';
+    stickerKeyboard.style.display = 'none';
+    bottomTabs.style.display = 'flex';
+    stickerIcon.src = 'sticker.svg';
+    stickerIcon.alt = 'emoji';
+    // Close search panel if open
+    closeStickerSearchPanel();
+});
+
+// ============================================================
+// STICKER SEARCH PANEL
+// ============================================================
+const stickerSearchPanel = document.getElementById('stickerSearchPanel');
+const searchPanelInput = document.getElementById('searchPanelInput');
+const searchPanelClear = document.getElementById('searchPanelClear');
+const searchPanelGrid = document.getElementById('searchPanelGrid');
+
+let currentSearchKeyword = '';
+let searchPanelScrollTriggered = false;
+let isPointerDown = false;
+let suppressOutsideClickUntil = 0;
+let autoOpenedFromEnd = false;
+
+function openStickerSearchPanel(keyword) {
+    currentSearchKeyword = keyword || '';
+    
+    // Capitalize first letter for display
+    const displayKeyword = currentSearchKeyword.charAt(0).toUpperCase() + currentSearchKeyword.slice(1);
+    searchPanelInput.value = displayKeyword;
+    
+    // Build the grid: 10 real stickers + 10 placeholders
+    searchPanelGrid.innerHTML = '';
+    const ids = stickerRecommendationMap[currentSearchKeyword.toLowerCase()];
+    
+    if (ids) {
+        ids.forEach(entry => {
+            const s = resolveStickerEntry(entry);
+            const item = document.createElement('div');
+            item.className = 'search-panel-grid-item sticker-item';
+            item.setAttribute('data-sticker', s.id);
+            item.innerHTML = `<img src="${s.src}">`;
+            searchPanelGrid.appendChild(item);
+        });
+    }
+    
+    // Add 10 placeholder cells (or extra stickers for "tired")
+    if (currentSearchKeyword.toLowerCase() === 'tired') {
+        for (let i = 21; i <= 34; i++) {
+            const item = document.createElement('div');
+            item.className = 'search-panel-grid-item sticker-item';
+            item.setAttribute('data-sticker', String(i));
+            item.innerHTML = `<img src="sticker ${i}.png">`;
+            searchPanelGrid.appendChild(item);
+        }
+    } else {
+        for (let i = 0; i < 10; i++) {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'search-panel-grid-item placeholder';
+            searchPanelGrid.appendChild(placeholder);
+        }
+    }
+    
+    // Open panel
+    stickerSearchPanel.classList.add('open');
+    searchPanelScrollTriggered = true;
+    suppressOutsideClickUntil = Date.now() + 800;
+}
+
+function closeStickerSearchPanel() {
+    stickerSearchPanel.classList.remove('open');
+    searchPanelScrollTriggered = false;
+}
+
+function isAtScrollEnd() {
+    const maxScroll = stickerScrollTrack.scrollWidth - stickerScrollTrack.clientWidth;
+    return maxScroll > 0 && stickerScrollTrack.scrollLeft >= maxScroll - 2;
+}
+
+function maybeAutoOpenFromEnd() {
+    if (searchPanelScrollTriggered) return;
+    if (!isAtScrollEnd()) {
+        autoOpenedFromEnd = false;
+        return;
+    }
+    if (autoOpenedFromEnd) return;
+    autoOpenedFromEnd = true;
+    const keyword = textInput.value.toLowerCase().trim();
+    openStickerSearchPanel(keyword);
+}
+
+function updateMoreIconState() {
+    const moreCell = stickerScrollTrack.querySelector('.sticker-search-more');
+    if (!moreCell) return;
+    const searchIcon = moreCell.querySelector('.search-icon');
+    const arrowIcon = moreCell.querySelector('.arrow-icon');
+    if (!searchIcon || !arrowIcon) return;
+    const rect = moreCell.getBoundingClientRect();
+    const phoneContainer = document.querySelector('.phone-container');
+    const containerRight = phoneContainer ? phoneContainer.getBoundingClientRect().right : window.innerWidth;
+    const distanceFromRight = Math.max(0, containerRight - rect.right);
+    const showArrow = distanceFromRight > 16;
+    searchIcon.style.display = showArrow ? 'none' : 'block';
+    arrowIcon.style.display = showArrow ? 'block' : 'none';
+}
+
+// Swipe-to-open logic removed; search panel opens only by tapping "More"
+
+// Click "Search more" button to open panel
+document.addEventListener('click', function(e) {
+    if (e.target.closest('.sticker-search-more')) {
+        if (hasDragged) {
+            hasDragged = false;
+            return;
+        }
+        const keyword = textInput.value.toLowerCase().trim();
+        openStickerSearchPanel(keyword);
+    }
+});
+
+// Expand/shrink sticker strip based on scroll position
+function updateStripWidth() {
+    if (stickerScrollTrack.scrollLeft > 20) {
+        stickerRecs.style.width = '100%';
+    } else {
+        stickerRecs.style.width = '';
+    }
+}
+
+stickerScrollTrack.addEventListener('scroll', function() {
+    updateMoreIconState();
+    maybeAutoOpenFromEnd();
+    updateStripWidth();
+}, { passive: true });
+
+window.addEventListener('resize', function() {
+    updateMoreIconState();
+});
+
+// Close panel when clear/X button is pressed
+searchPanelClear.addEventListener('click', function() {
+    closeStickerSearchPanel();
+});
+
+// Close search panel when tapping outside the panel
+function handleOutsideDismiss(e) {
+    if (!stickerSearchPanel.classList.contains('open')) return;
+    if (Date.now() < suppressOutsideClickUntil) return;
+    const clickedInside = e.target.closest('#stickerSearchPanel');
+    const clickedSearchMore = e.target.closest('.sticker-search-more');
+    if (!clickedInside && !clickedSearchMore) {
+        closeStickerSearchPanel();
+    }
+}
+
+document.addEventListener('mousedown', handleOutsideDismiss);
+document.addEventListener('touchstart', handleOutsideDismiss, { passive: true });
+
+</script>
+</body>
+</html>
