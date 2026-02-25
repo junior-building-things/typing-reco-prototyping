@@ -621,7 +621,7 @@ animation: slideInMessage 0.2s ease;
 .sticker-nav {
     display: flex;
     justify-content: space-around;
-    padding: 5px 10px 15px 10px;
+    padding: 2px 10px 15px 10px;
     align-items: center;
     background: #f5f5f5;
 }
@@ -915,6 +915,15 @@ Yes, hahahah, and when she did, everyone's wristbands lit up!
 <div class="sticker-scroll" id="stickerScrollTrack">
 </div>
 </div>
+<div class="sticker-nav" id="stickerNav" style="display: none;">
+    <div class="sticker-nav-item"><img src="search.svg" alt="search"></div>
+    <div class="sticker-nav-item active"><img src="save.svg" alt="save"></div>
+    <div class="sticker-nav-item"><img src="emoji.svg" alt="emoji"></div>
+    <div class="sticker-nav-item"><img src="my_avatar.png" alt="avatar"></div>
+    <div class="sticker-nav-item"><img src="ai_self.jpg" alt="ai self"></div>
+    <div class="sticker-nav-item"><img src="set1.jpg" alt="set 1"></div>
+    <div class="sticker-nav-item"><img src="set2.png" alt="set 2"></div>
+</div>
 <div class="bottom-tabs" style="background-color: #D1D5DC !important; display: flex !important; justify-content: center !important; align-items: center !important; padding-top: 8px !important; padding-bottom: 3px !important;">
 <div class="tab" id="tiktok-key">TikTok</div>
 <div class="tab" id="experience-key">Experience</div>
@@ -967,15 +976,6 @@ Yes, hahahah, and when she did, everyone's wristbands lit up!
 </div>
 
 <div class="sticker-keyboard" id="stickerKeyboard">
-    <div class="sticker-nav">
-        <div class="sticker-nav-item"><img src="search.svg" alt="search"></div>
-        <div class="sticker-nav-item active"><img src="save.svg" alt="save"></div>
-        <div class="sticker-nav-item"><img src="emoji.svg" alt="emoji"></div>
-        <div class="sticker-nav-item"><img src="my_avatar.png" alt="avatar"></div>
-        <div class="sticker-nav-item"><img src="ai_self.jpg" alt="ai self"></div>
-        <div class="sticker-nav-item"><img src="set1.jpg" alt="set 1"></div>
-        <div class="sticker-nav-item"><img src="set2.png" alt="set 2"></div>
-    </div>
     <div class="sticker-keyboard-handle"></div>
     <div class="sticker-content">
         <div class="sticker-section-title">Recently used</div>
@@ -1025,6 +1025,15 @@ Yes, hahahah, and when she did, everyone's wristbands lit up!
 </div>
 
 </div>
+<div style="color: #999; font-size: 14px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin-top: 32px; max-width: 375px; margin-left: auto; margin-right: auto;">
+<p style="margin-bottom: 8px; font-weight: 600; color: #4DA3FF;">Supported functionality:</p>
+<ul style="margin: 0; padding-left: 20px; line-height: 1.8;">
+<li>Trigger recommendations for "tired" and "happy"</li>
+<li>Swipe through the recommended stickers</li>
+<li>Click a sticker to send</li>
+<li>Click sticker icon to open sticker panel</li>
+</ul>
+</div>
 <script>
 // ============================================================
 // CONFIGURABLE STICKER RECOMMENDATION MAP
@@ -1073,6 +1082,7 @@ const albumIcon = document.querySelector('.album-icon');
 const stickerIcon = document.querySelector('.sticker-icon');
 const keyboard = document.querySelector('.keyboard');
 const stickerKeyboard = document.getElementById('stickerKeyboard');
+const stickerNav = document.getElementById('stickerNav');
 const bottomTabs = document.querySelector('.bottom-tabs');
 
 // Build default stickers (shown when no keyword matches)
@@ -1407,6 +1417,7 @@ stickerIcon.addEventListener('click', function() {
         stickerKeyboard.style.display = 'flex';
         bottomTabs.style.display = 'none';
         stickerRecs.style.display = 'none';
+        stickerNav.style.display = 'flex';
         stickerIcon.src = 'keyboard.svg';
         stickerIcon.alt = 'keyboard';
     } else {
@@ -1414,6 +1425,7 @@ stickerIcon.addEventListener('click', function() {
         stickerKeyboard.style.display = 'none';
         bottomTabs.style.display = 'flex';
         stickerRecs.style.display = 'block';
+        stickerNav.style.display = 'none';
         stickerIcon.src = 'sticker.svg';
         stickerIcon.alt = 'emoji';
     }
@@ -1425,6 +1437,7 @@ textInput.addEventListener('focus', function() {
     stickerKeyboard.style.display = 'none';
     bottomTabs.style.display = 'flex';
     stickerRecs.style.display = 'block';
+    stickerNav.style.display = 'none';
     stickerIcon.src = 'sticker.svg';
     stickerIcon.alt = 'emoji';
     // Close search panel if open
@@ -1541,10 +1554,8 @@ document.addEventListener('click', function(e) {
     }
 });
 
-// No swipe-to-open interaction
 stickerScrollTrack.addEventListener('scroll', function() {
     updateMoreIconState();
-    maybeAutoOpenFromEnd();
 }, { passive: true });
 
 window.addEventListener('resize', function() {
